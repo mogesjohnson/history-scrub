@@ -85,7 +85,11 @@ export function loadPatterns(file: string): Detector[] {
   return out;
 }
 
-export function detectLine(line: string, detectors: Detector[]): Hit[] {
+/**
+ * Run detectors over one line. Pass `entropy: false` to skip the high-entropy check
+ * (used for lockfiles, whose integrity hashes are random by design and not secrets).
+ */
+export function detectLine(line: string, detectors: Detector[], opts: { entropy?: boolean } = {}): Hit[] {
   const hits: Hit[] = [];
   const seen = new Set<string>();
   for (const d of detectors) {
@@ -97,6 +101,7 @@ export function detectLine(line: string, detectors: Detector[]): Hit[] {
       hits.push({ type: d.name, value });
     }
   }
+  if (opts.entropy === false) return hits;
   for (const t of highEntropy(line)) {
     if ([...seen].some((s) => s.includes(t) || t.includes(s))) continue;
     seen.add(t);

@@ -18,6 +18,16 @@ export function isEnvFile(path: string): boolean {
   return /^\.env(\..+)?$/.test(base) && !/\.(example|sample|template)$/.test(base);
 }
 
+const LOCKFILES = new Set([
+  "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock",
+  "Cargo.lock", "poetry.lock", "Pipfile.lock", "composer.lock", "Gemfile.lock", "go.sum",
+]);
+
+/** Dependency lockfiles: their integrity hashes look random, so high-entropy is skipped there. */
+export function isLockfile(path: string): boolean {
+  return LOCKFILES.has(path.split("/").pop() || "");
+}
+
 export function gitLog(repo: string): string {
   return execFileSync(
     "git",
@@ -57,7 +67,7 @@ export function scanLog(log: string, detectors: Detector[]): Finding[] {
       continue;
     }
     if (raw.startsWith("+")) {
-      for (const h of detectLine(raw.slice(1), detectors)) {
+      for (const h of detectLine(raw.slice(1), detectors, { entropy: !isLockfile(file) })) {
         add({ commit, file, line: lineNo, type: h.type, value: h.value, preview: mask(h.type, h.value) });
       }
       lineNo++;
