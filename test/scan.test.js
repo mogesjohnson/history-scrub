@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { BUILTIN } = require("../dist/detectors");
-const { isEnvFile, scanLog } = require("../dist/scan");
+const { isEnvFile, isLockfile, scanLog } = require("../dist/scan");
 const { fakes } = require("./fakes");
 
 const MARK = "__HISTORY_SCRUB_COMMIT__";
@@ -87,4 +87,22 @@ test("scanLog dedupes identical findings", () => {
 
 test("scanLog returns nothing for an empty log", () => {
   assert.deepEqual(scanLog("", BUILTIN), []);
+});
+
+test("isLockfile matches dependency lockfiles by base name", () => {
+  for (const p of ["package-lock.json", "web/yarn.lock", "pnpm-lock.yaml", "go.sum", "Cargo.lock"]) {
+    assert.ok(isLockfile(p), p);
+  }
+  for (const p of ["package.json", "lock.json", "docs/package-lock.json.md"]) assert.ok(!isLockfile(p), p);
+});
+
+test("scanLog skips high-entropy in lockfiles but still runs named detectors there", () => {
+  const hash = `sha512-${fakes.entropy(21)}/${fakes.entropy(22)}+${fakes.entropy(23)}==`;
+  const body = [
+    `+      "integrity": "${hash}",`,
+    `+      "resolved": "https://registry.test/x.tgz?token=${fakes.github(24)}",`,
+  ];
+  const log = (file) => [`${MARK} ${C1}`, `diff --git a/${file} b/${file}`, "--- /dev/null", `+++ b/${file}`, "@@ -0,0 +1,2 @@", ...body].join("\n");
+  assert.deepEqual(scanLog(log("package-lock.json"), BUILTIN).map((f) => f.type), ["github-token"]);
+  assert.ok(scanLog(log("src/hashes.txt"), BUILTIN).some((f) => f.type === "high-entropy"));
 });

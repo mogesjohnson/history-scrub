@@ -40,7 +40,7 @@ history-scrub plan [repo-path] [--patterns file] [--out dir]
 | `openai-key`, `anthropic-key` | `sk-...`, `sk-proj-...`, `sk-ant-...` |
 | `slack-token` | `xoxb-`, `xoxa-`, `xoxp-`, `xoxr-`, `xoxs-` |
 | `private-key` | `-----BEGIN ... PRIVATE KEY-----` blocks |
-| `high-entropy` | mixed-case alphanumeric tokens of 24+ chars with Shannon entropy >= 4.5 |
+| `high-entropy` | mixed-case alphanumeric tokens of 24+ chars with Shannon entropy >= 4.5 (skipped in lockfiles such as `package-lock.json`, `yarn.lock`, `go.sum`) |
 | `env-file` | any `.env` / `.env.*` file touched in history (`.env.example` skipped) |
 | custom | lines of `--patterns file`: one regex per line, optionally `name: regex`; `#` comments |
 
