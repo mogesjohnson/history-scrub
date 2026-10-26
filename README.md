@@ -107,6 +107,10 @@ Scanned: all branches and tags (`git log -p --all`). Findings: 4.
 ```sh
 npm run build
 node dist/cli.js scan /path/to/repo --out /tmp/hs
+npm test           # builds, then runs node:test suites in test/ (no extra dependencies)
 ```
+
+Tests build fake credentials at runtime (`test/fakes.js`) so no token-shaped literal is committed.
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build` and `npm test` on Node 20.
 
 Agent and contributor rules are in [AGENTS.md](AGENTS.md) and [RULES.md](RULES.md).

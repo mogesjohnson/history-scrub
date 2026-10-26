@@ -8,6 +8,7 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p .",
+    "test": "npm run build && node --test test/",
     "prepare": "tsc -p ."
   },
   "engines": { "node": ">=18" },
