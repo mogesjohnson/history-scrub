@@ -111,6 +111,23 @@ test("scan and plan find leaks on every ref and never write a full secret", (t) 
   if (process.platform !== "win32") assert.equal(fs.statSync(replPath).mode & 0o777, 0o600);
 });
 
+test("scan reads real git headers for odd file names and '++' lines", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "hs-names-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const repo = path.join(root, "repo");
+  fs.mkdirSync(repo);
+  git(repo, "init", "-q");
+  const files = { "my b/c.txt": `x\n++ ${SECRETS.aws}\n`, "caf\u00e9/.env": "S=1\n" };
+  if (process.platform !== "win32") files['q"t/.env'] = "S=1\n";
+  commit(repo, files, "odd names");
+  const out = path.join(root, "out");
+  run(repo, out, "scan");
+  const report = fs.readFileSync(path.join(out, "history-scrub-report.md"), "utf8");
+  assert.match(report, /`my b\/c.txt` \| 2 \| aws-access-key/);
+  assert.match(report, /`caf\u00e9\/\.env` \| - \| env-file/);
+  if (process.platform !== "win32") assert.match(report, /`q"t\/\.env` \| - \| env-file/);
+});
+
 test("scan of a path that is not a git repo exits 1 with a clear message", (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hs-nogit-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
