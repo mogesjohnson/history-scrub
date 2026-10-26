@@ -1,0 +1,15 @@
+{
+  "name": "history-scrub",
+  "version": "0.1.0",
+  "description": "Scan git history for leaked secrets and personal info; plan a filter-repo cleanup",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": { "history-scrub": "dist/cli.js" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p .",
+    "prepare": "tsc -p ."
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": { "typescript": "^5.4.0", "@types/node": "^20.11.0" }
+}
