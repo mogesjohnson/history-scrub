@@ -72,7 +72,10 @@ function main(): void {
   if (args.cmd === "plan") {
     const replPath = path.join(args.out, "replacements.txt");
     const planPath = path.join(args.out, "history-scrub-plan.md");
-    fs.writeFileSync(replPath, renderReplacements(findings), { mode: 0o600 });
+    // `mode` only applies when the file is created, so remove any old copy first: an existing
+    // 0644 replacements.txt would otherwise keep its mode while receiving the full secrets.
+    fs.rmSync(replPath, { force: true });
+    fs.writeFileSync(replPath, renderReplacements(findings), { mode: 0o600, flag: "wx" });
     fs.writeFileSync(planPath, renderPlan(args.repo, findings, path.resolve(replPath)));
     process.stdout.write(`Wrote ${planPath}\n`);
     process.stdout.write(

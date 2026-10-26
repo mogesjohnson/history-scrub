@@ -128,6 +128,23 @@ test("scan reads real git headers for odd file names and '++' lines", (t) => {
   if (process.platform !== "win32") assert.match(report, /`q"t\/\.env` \| - \| env-file/);
 });
 
+test("plan rewrites an existing world-readable replacements.txt as 0600", { skip: process.platform === "win32" }, (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "hs-mode-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const repo = path.join(root, "repo");
+  fs.mkdirSync(repo);
+  git(repo, "init", "-q");
+  commit(repo, { "a.txt": `k=${SECRETS.aws}\n` }, "leak");
+  const out = path.join(root, "out");
+  fs.mkdirSync(out);
+  const replPath = path.join(out, "replacements.txt");
+  fs.writeFileSync(replPath, "stale\n", { mode: 0o644 });
+  fs.chmodSync(replPath, 0o644);
+  run(repo, out, "plan");
+  assert.equal(fs.statSync(replPath).mode & 0o777, 0o600);
+  assert.equal(fs.readFileSync(replPath, "utf8"), `${SECRETS.aws}==>REDACTED\n`);
+});
+
 test("scan of a path that is not a git repo exits 1 with a clear message", (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hs-nogit-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
