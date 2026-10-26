@@ -1,0 +1,5 @@
+node_modules/
+dist/
+history-scrub-report.md
+history-scrub-plan.md
+replacements.txt
