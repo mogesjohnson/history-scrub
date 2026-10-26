@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { BUILTIN } = require("../dist/detectors");
-const { isEnvFile, isLockfile, scanLog } = require("../dist/scan");
+const { diffPath, isEnvFile, isLockfile, scanLog } = require("../dist/scan");
 const { fakes } = require("./fakes");
 
 const MARK = "__HISTORY_SCRUB_COMMIT__";
@@ -105,4 +105,25 @@ test("scanLog skips high-entropy in lockfiles but still runs named detectors the
   const log = (file) => [`${MARK} ${C1}`, `diff --git a/${file} b/${file}`, "--- /dev/null", `+++ b/${file}`, "@@ -0,0 +1,2 @@", ...body].join("\n");
   assert.deepEqual(scanLog(log("package-lock.json"), BUILTIN).map((f) => f.type), ["github-token"]);
   assert.ok(scanLog(log("src/hashes.txt"), BUILTIN).some((f) => f.type === "high-entropy"));
+});
+
+test("diffPath handles spaces, ' b/' inside names and quoted paths", () => {
+  assert.equal(diffPath("diff --git a/src/app.ts b/src/app.ts"), "src/app.ts");
+  assert.equal(diffPath("diff --git a/my b/c.txt b/my b/c.txt"), "my b/c.txt");
+  assert.equal(diffPath('diff --git "a/caf\\303\\251/.env" "b/caf\\303\\251/.env"'), "caf\u00e9/.env");
+  assert.equal(diffPath('diff --git "a/q\\"t/.env" "b/q\\"t/.env"'), 'q"t/.env');
+  assert.equal(diffPath('diff --git "a/tab\\there" "b/tab\\there"'), "tab\there");
+});
+
+test("scanLog scans added lines whose content starts with '++ ' or '-- '", () => {
+  const key = fakes.aws(31);
+  const log = [
+    `${MARK} ${C1}`, "diff --git a/notes.md b/notes.md", "--- /dev/null", "+++ b/notes.md", "@@ -0,0 +1,2 @@",
+    `+++ ${key}`, `+--- ${fakes.github(32)}`,
+  ].join("\n");
+  const got = scanLog(log, BUILTIN).map(({ file, line, type }) => ({ file, line, type }));
+  assert.deepEqual(got, [
+    { file: "notes.md", line: 1, type: "aws-access-key" },
+    { file: "notes.md", line: 2, type: "github-token" },
+  ]);
 });
