@@ -18,6 +18,7 @@ Run these from the repo root. They are the only definition of "checks pass".
 <!-- REPO-SPECIFIC: replace with the real commands. Delete any that do not exist. -->
 - Install: `npm install` (dev dependency: typescript only).
 - Build: `npm run build` (tsc into `dist/`). Smoke run: `node dist/cli.js scan <repo>`.
+- Test: `npm test` (builds, then `node --test test/`; no extra dependencies). CI runs the same.
 <!-- /REPO-SPECIFIC -->
 
 ## Where things live
