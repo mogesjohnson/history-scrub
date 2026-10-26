@@ -95,6 +95,9 @@ export function detectLine(line: string, detectors: Detector[], opts: { entropy?
   for (const d of detectors) {
     for (const m of line.matchAll(d.regex)) {
       const value = m[0];
+      // A custom pattern such as `x*` can match the empty string; that is never a finding
+      // (and an empty "seen" value would hide every high-entropy token on the line).
+      if (!value) continue;
       if (d.keep && !d.keep(value)) continue;
       if (seen.has(value)) continue;
       seen.add(value);

@@ -109,3 +109,9 @@ test("loadPatterns reports the file and line of an invalid regex", (t) => {
   fs.writeFileSync(file, "ok: abc\nbad: (unclosed\n");
   assert.throws(() => loadPatterns(file), (e) => e.message.startsWith(`${file}:2: invalid regex`));
 });
+
+test("custom patterns that can match the empty string report only real matches", () => {
+  const tok = fakes.entropy(41);
+  const hits = detectLine(`id=ab tok=${tok}`, [{ name: "maybe-ab", regex: /(?:ab)*/g }, ...BUILTIN]);
+  assert.deepEqual(hits, [{ type: "maybe-ab", value: "ab" }, { type: "high-entropy", value: tok }]);
+});
