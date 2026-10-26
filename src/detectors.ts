@@ -53,7 +53,7 @@ export function shannonEntropy(s: string): number {
   return h;
 }
 
-const TOKEN = /[A-Za-z0-9+=_-]{24,}/g;
+const TOKEN = /[A-Za-z0-9+_-]{24,}={0,2}/g;
 export const ENTROPY_THRESHOLD = 4.5;
 
 function highEntropy(line: string): string[] {
